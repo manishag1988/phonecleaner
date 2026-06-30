@@ -1,6 +1,7 @@
 package com.phonecleaner
 
 import android.Manifest
+import android.annotation.TargetApi
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -235,6 +236,7 @@ class MainActivity : AppCompatActivity() {
         deleteFiles(selected, "Deleted ${selected.size} file(s)")
     }
 
+    @TargetApi(Build.VERSION_CODES.R)
     private fun deleteFiles(filesToDelete: List<MediaFile>, successMessage: String) {
         if (filesToDelete.isEmpty()) return
 
