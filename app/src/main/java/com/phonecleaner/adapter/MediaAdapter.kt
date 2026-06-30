@@ -1,16 +1,25 @@
 package com.phonecleaner.adapter
 
+import android.content.ContentResolver
+import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.phonecleaner.R
 import com.phonecleaner.databinding.ItemMediaBinding
 import com.phonecleaner.model.MediaFile
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MediaAdapter(
     private val files: List<MediaFile>,
+    private val contentResolver: ContentResolver,
     private val onDeleteClick: (MediaFile) -> Unit,
+    private val onPreviewClick: (MediaFile) -> Unit,
     private val onSelectionChanged: (Boolean) -> Unit
 ) : RecyclerView.Adapter<MediaAdapter.MediaViewHolder>() {
 
@@ -59,6 +68,9 @@ class MediaAdapter(
                 else -> R.drawable.ic_image
             }
             binding.imageViewIcon.setImageResource(icon)
+            binding.imageViewIcon.scaleType = ImageView.ScaleType.CENTER_CROP
+            binding.imageViewIcon.tag = file.id
+            loadThumbnail(file, binding.imageViewIcon, icon)
 
             if (isSelectionMode) {
                 binding.checkBoxSelect.visibility = View.VISIBLE
@@ -76,8 +88,35 @@ class MediaAdapter(
                 binding.checkBoxSelect.setOnCheckedChangeListener(null)
             }
 
+            binding.root.setOnClickListener {
+                if (!isSelectionMode) {
+                    onPreviewClick(file)
+                }
+            }
+
             binding.buttonDelete.setOnClickListener {
                 onDeleteClick(file)
+            }
+        }
+    }
+
+    private fun loadThumbnail(file: MediaFile, target: ImageView, fallbackIcon: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val bitmap = try {
+                contentResolver.loadThumbnail(file.uri, Size(256, 256), null)
+            } catch (_: Exception) {
+                null
+            }
+
+            withContext(Dispatchers.Main) {
+                if (target.tag == file.id) {
+                    if (bitmap != null) {
+                        target.setImageBitmap(bitmap)
+                        target.scaleType = ImageView.ScaleType.CENTER_CROP
+                    } else {
+                        target.setImageResource(fallbackIcon)
+                    }
+                }
             }
         }
     }

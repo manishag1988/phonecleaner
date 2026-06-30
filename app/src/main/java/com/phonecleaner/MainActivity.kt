@@ -1,6 +1,7 @@
 package com.phonecleaner
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -165,8 +166,10 @@ class MainActivity : AppCompatActivity() {
             } else {
                 binding.textViewEmpty.visibility = View.GONE
                 binding.recyclerView.visibility = View.VISIBLE
-                val adapter = MediaAdapter(files, { file ->
+                val adapter = MediaAdapter(files, contentResolver, { file ->
                     deleteFile(file)
+                }, { file ->
+                    previewFile(file)
                 }) { hasSelection ->
                     val currentAdapter = binding.recyclerView.adapter as? MediaAdapter
                     binding.buttonDeleteSelected.text = when {
@@ -178,6 +181,19 @@ class MainActivity : AppCompatActivity() {
                 binding.recyclerView.adapter = adapter
                 updateSelectionUI(adapter)
             }
+        }
+    }
+
+    private fun previewFile(file: MediaFile) {
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(file.uri, file.mimeType.ifBlank { "application/octet-stream" })
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        try {
+            startActivity(Intent.createChooser(intent, "Preview file"))
+        } catch (_: Exception) {
+            Toast.makeText(this, "No app available to preview this file", Toast.LENGTH_SHORT).show()
         }
     }
 
