@@ -118,6 +118,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateSelectionUI(adapter: MediaAdapter?) {
+        binding.buttonDeleteSelected.isEnabled = adapter != null && currentFiles.isNotEmpty()
+
         if (adapter != null && adapter.isSelectionMode) {
             binding.buttonDeleteSelected.text = if (adapter.hasSelection()) {
                 "Delete (${adapter.getSelectedFiles().size})"
@@ -199,10 +201,11 @@ class MainActivity : AppCompatActivity() {
                     previewFile(file)
                 }) { hasSelection ->
                     val currentAdapter = binding.recyclerView.adapter as? MediaAdapter
-                    binding.buttonDeleteSelected.text = when {
-                        hasSelection && currentAdapter?.isSelectionMode == true -> "Delete (${currentAdapter.getSelectedFiles().size})"
-                        currentAdapter?.isSelectionMode == true -> "Cancel"
-                        else -> "Select"
+                    if (currentAdapter != null) {
+                        updateSelectionUI(currentAdapter)
+                    } else {
+                        binding.buttonDeleteSelected.isEnabled = false
+                        binding.buttonDeleteSelected.text = "Select"
                     }
                 }
                 binding.recyclerView.adapter = adapter

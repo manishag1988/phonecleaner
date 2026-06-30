@@ -37,6 +37,14 @@ class MediaAdapter(
         notifyDataSetChanged()
     }
 
+    fun setSelectionModeEnabled(enabled: Boolean) {
+        isSelectionMode = enabled
+        if (!enabled) {
+            selectedItems.clear()
+        }
+        notifyDataSetChanged()
+    }
+
     fun selectAll() {
         selectedItems.clear()
         files.forEach { selectedItems.add(it.id) }
